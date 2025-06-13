@@ -252,37 +252,57 @@ const Sidebar = React.forwardRef<
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, children: propChildren, onClick, asChild: propAsChild, ...buttonProps }, ref) => {
+  HTMLButtonElement,
+  Omit<React.ComponentProps<typeof Button>, "asChild" | "onClick"> & {
+    asChild?: boolean;
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  }
+>(({ className, children, onClick, asChild, ...buttonProps }, ref) => {
   const { toggleSidebar } = useSidebar();
 
-  const defaultContent = (
-    <>
-      <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
-    </>
-  );
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick) {
+      onClick(event);
+    }
+    toggleSidebar();
+  };
 
+  if (asChild) {
+    return (
+      <Button
+        ref={ref}
+        onClick={handleClick}
+        className={className} // Pass className from SidebarTrigger props
+        {...buttonProps}   // Pass variant, size etc. from SidebarTrigger props
+        asChild={true}     // This makes this Button instance a Slot
+      >
+        {children}         {/* This will be the <button> from AppLayout */}
+      </Button>
+    );
+  }
+
+  // Default rendering: SidebarTrigger is a self-contained button
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant={buttonProps.variant ?? (propAsChild ? undefined : "ghost")}
-      size={buttonProps.size ?? (propAsChild ? undefined : "icon")}
-      className={cn(!propAsChild && "h-7 w-7", className)}
-      onClick={(event) => {
-        if (onClick) onClick(event);
-        toggleSidebar();
-      }}
+      variant={buttonProps.variant ?? "ghost"}
+      size={buttonProps.size ?? "icon"}
+      className={cn("h-7 w-7", className)} // Default mobile trigger styling
+      onClick={handleClick}
       {...buttonProps}
-      asChild={!!propAsChild}
     >
-      {propAsChild ? propChildren : defaultContent}
+      {children || ( // Render passed children or default icon
+        <>
+          <PanelLeft />
+          <span className="sr-only">Toggle Sidebar</span>
+        </>
+      )}
     </Button>
   );
 });
 SidebarTrigger.displayName = "SidebarTrigger"
+
 
 const SidebarRail = React.forwardRef<
   HTMLButtonElement,
@@ -511,22 +531,17 @@ SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<"button"> & {
-    asChild?: boolean
-    isActive?: boolean
+  React.ComponentProps<typeof Button> & {
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  } & VariantProps<typeof buttonVariants>
+  }
 >(
   (
     {
-      asChild = false,
-      isActive = false,
-      variant = "default", 
-      size = "default",    
+      isActive, // isActive is derived from ButtonProps, but used here explicitly
       tooltip,
       className,
       children, 
-      ...props
+      ...props // props will include variant, size, etc.
     },
     ref
   ) => {
@@ -537,21 +552,17 @@ const SidebarMenuButton = React.forwardRef<
         ref={ref}
         data-sidebar="menu-button"
         data-active={isActive}
-        variant={variant}
-        size={size}
         className={cn(
            "w-full items-center gap-2 overflow-hidden text-left outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50",
            isActive && "bg-sidebar-primary text-sidebar-primary-foreground", 
-           state === "collapsed" && (size === "lg" ? "!p-0" : "!size-8 !p-2"),
+           state === "collapsed" && (props.size === "lg" ? "!p-0" : "!size-8 !p-2"), // Check props.size
           className
         )}
-        asChild={asChild}
-        {...props}
+        {...props} // Spread all props including variant, size, asChild
       >
         {children}
       </Button>
     )
-
 
     if (!tooltip) {
       return buttonElement
@@ -725,7 +736,7 @@ export {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarInput,
-  SidebarInset,
+  SidebarInset, // Ensure SidebarInset is exported
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
@@ -740,4 +751,7 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  buttonVariants as sidebarMenuButtonVariants, // Exporting buttonVariants as sidebarMenuButtonVariants
 }
+
+    

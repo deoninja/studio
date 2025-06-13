@@ -13,12 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarTrigger,
-  // SidebarInset was removed from sidebar.tsx exports, ensure it's not used or correctly re-added if necessary
-  // For now, assuming SidebarInset is part of the main layout structure if needed, or handled by CSS.
-  // If SidebarInset itself is a component, it needs to be imported.
-  // Based on the current structure, SidebarInset seems to be a styling class for the main content area.
+  SidebarInset, // Now correctly expected to be imported
 } from '@/components/ui/sidebar'; 
-import { Button, buttonVariants } from '@/components/ui/button'; // Import buttonVariants
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -34,7 +31,7 @@ import {
   Users,
   LogOut,
   Settings,
-  PanelLeft, // Import PanelLeft if SidebarTrigger's default icon is needed elsewhere or if we revert
+  PanelLeft,
 } from 'lucide-react';
 
 interface NavItem {
@@ -80,7 +77,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <Link
                         href={item.href}
                         className={cn(
-                          buttonVariants({
+                          buttonVariants({ // Using buttonVariants from @/components/ui/button
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
@@ -111,7 +108,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <Link
                         href={item.href}
                         className={cn(
-                           buttonVariants({
+                           buttonVariants({ // Using buttonVariants from @/components/ui/button
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
@@ -142,21 +139,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Button>
         </SidebarFooter>
       </Sidebar>
-      {/* Ensure SidebarInset is correctly used - it's a div wrapper for main content */}
-      <div className={cn(
-        "group/sidebar-inset-wrapper flex min-h-svh flex-1 flex-col bg-background",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)] md:peer-data-[variant=inset]:ml-[calc(var(--sidebar-width)_+_theme(spacing.2)_+2px)] md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow"
-        // The class 'peer-data-[variant=inset]:ml-0' was removed as it conflicts with collapsed state adjustment
-        // Using a specific class for the inset area that the sidebar can influence
-      )}>
+      <SidebarInset> {/* SidebarInset component from sidebar.tsx */}
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4 md:hidden">
-          <SidebarTrigger asChild>
-            <button 
-              className={cn(
-                buttonVariants({ variant: "outline", size: "icon" }),
-                "h-7 w-7" // Explicitly setting size for the mobile trigger
-              )}
-            >
+          <SidebarTrigger
+            asChild
+            variant="outline" // Passed to inner Button, which becomes Slot
+            size="icon"       // Passed to inner Button, which becomes Slot
+            className="h-7 w-7"   // Passed to inner Button, which becomes Slot
+          >
+            <button> {/* Simpler child, Slot will provide styling */}
               <HeartPulse className="h-5 w-5" />
               <span className="sr-only">Toggle Menu</span>
             </button>
@@ -169,7 +160,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {children}
         </main>
-      </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
+
+    
