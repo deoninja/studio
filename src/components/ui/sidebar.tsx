@@ -8,7 +8,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button" // Ensure buttonVariants is imported
+import { Button, buttonVariants } from "@/components/ui/button" 
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -71,8 +71,6 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    // This is the internal state of the sidebar.
-    // We use openProp and setOpenProp for control from outside the component.
     const [_open, _setOpen] = React.useState(defaultOpen)
     const open = openProp ?? _open
     const setOpen = React.useCallback(
@@ -84,20 +82,17 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // This sets the cookie to keep the sidebar state.
         document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
       [setOpenProp, open]
     )
 
-    // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       return isMobile
         ? setOpenMobile((open) => !open)
         : setOpen((open) => !open)
     }, [isMobile, setOpen, setOpenMobile])
 
-    // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
@@ -113,8 +108,6 @@ const SidebarProvider = React.forwardRef<
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
-    // We add a state so that we can do data-state="expanded" or "collapsed".
-    // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed"
 
     const contextValue = React.useMemo<SidebarContext>(
@@ -222,7 +215,6 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
       >
-        {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
@@ -239,7 +231,6 @@ const Sidebar = React.forwardRef<
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -262,31 +253,32 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button> // This includes `asChild` and `children`
->(({ className, onClick, children, asChild, ...buttonProps }, ref) => {
+  React.ComponentProps<typeof Button>
+>(({ className, children: propChildren, onClick, asChild: propAsChild, ...buttonProps }, ref) => {
   const { toggleSidebar } = useSidebar();
+
+  const defaultContent = (
+    <>
+      <PanelLeft />
+      <span className="sr-only">Toggle Sidebar</span>
+    </>
+  );
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant={buttonProps.variant ?? (asChild ? undefined : "ghost")} // Use passed variant if asChild, else default to ghost
-      size={buttonProps.size ?? (asChild ? undefined : "icon")} // Use passed size if asChild, else default to icon
-      className={cn(asChild ? "" : "h-7 w-7", className)} // Apply default trigger styles only if not `asChild`
+      variant={buttonProps.variant ?? (propAsChild ? undefined : "ghost")}
+      size={buttonProps.size ?? (propAsChild ? undefined : "icon")}
+      className={cn(!propAsChild && "h-7 w-7", className)}
       onClick={(event) => {
-        if (onClick) onClick(event); // Call user-provided onClick
+        if (onClick) onClick(event);
         toggleSidebar();
       }}
-      {...buttonProps} // Spread the rest of the button props (could include user's variant, size, className if asChild)
-      asChild={!!asChild} // Pass the asChild prop to the internal Button
+      {...buttonProps}
+      asChild={!!propAsChild}
     >
-      {asChild ? children : ( // If SidebarTrigger is used with asChild, render its children.
-                              // Otherwise, render the default PanelLeft icon and sr-only span.
-        <>
-          <PanelLeft />
-          <span className="sr-only">Toggle Sidebar</span>
-        </>
-      )}
+      {propAsChild ? propChildren : defaultContent}
     </Button>
   );
 });
@@ -468,7 +460,6 @@ const SidebarGroupAction = React.forwardRef<
       data-sidebar="group-action"
       className={cn(
         "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases the hit area of the button on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "group-data-[collapsible=icon]:hidden",
         className
@@ -518,46 +509,39 @@ const SidebarMenuItem = React.forwardRef<
 ))
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
-// Exported buttonVariants for use in AppLayout
-// const sidebarMenuButtonVariants = cva( // This was already exported, which is good.
-// ...
-// )
-
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  } & VariantProps<typeof buttonVariants> // Use general buttonVariants
+  } & VariantProps<typeof buttonVariants>
 >(
   (
     {
       asChild = false,
       isActive = false,
-      variant = "default", // Use general Button variants
-      size = "default",    // Use general Button sizes
+      variant = "default", 
+      size = "default",    
       tooltip,
       className,
-      children, // Ensure children is destructured
+      children, 
       ...props
     },
     ref
   ) => {
-    // const Comp = asChild ? Slot : "button" // This logic is handled by ui/Button
     const { isMobile, state } = useSidebar()
 
     const buttonElement = (
-      <Button // Use the ui/Button directly
+      <Button 
         ref={ref}
         data-sidebar="menu-button"
         data-active={isActive}
         variant={variant}
         size={size}
         className={cn(
-          // Apply specific sidebar menu button styles if needed, or rely on variants
            "w-full items-center gap-2 overflow-hidden text-left outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-           isActive && "bg-sidebar-primary text-sidebar-primary-foreground", // More direct active styling
+           isActive && "bg-sidebar-primary text-sidebar-primary-foreground", 
            state === "collapsed" && (size === "lg" ? "!p-0" : "!size-8 !p-2"),
           className
         )}
@@ -605,7 +589,6 @@ const SidebarMenuAction = React.forwardRef<
       data-sidebar="menu-action"
       className={cn(
         "absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 peer-hover/menu-button:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases the hit area of the button on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
@@ -648,7 +631,6 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   }, [])
@@ -748,7 +730,6 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuButton,
-  sidebarMenuButtonVariants, // Export general buttonVariants as sidebarMenuButtonVariants
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
@@ -760,5 +741,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
