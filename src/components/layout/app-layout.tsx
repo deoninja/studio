@@ -12,13 +12,14 @@ import {
   SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarTrigger, // SidebarMenuButton removed as we'll style Link directly
-  sidebarMenuButtonVariants, // Import the variants
+  SidebarTrigger,
+  // sidebarMenuButtonVariants, // This was the problematic part from previous step
+  SidebarInset, // Ensured this is imported
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button'; // Import buttonVariants
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -77,11 +78,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         href={item.href}
                         data-active={pathname === item.href}
                         className={cn(
-                          sidebarMenuButtonVariants({
+                          buttonVariants({ // Use buttonVariants directly
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start"
+                          "w-full justify-start gap-2", // Ensure gap for icon and text
+                          "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
                         {item.icon}
@@ -105,11 +108,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         href={item.href}
                         data-active={pathname === item.href}
                         className={cn(
-                          sidebarMenuButtonVariants({
+                           buttonVariants({ // Use buttonVariants directly
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start"
+                          "w-full justify-start gap-2", // Ensure gap for icon and text
+                          "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
                         {item.icon}
@@ -152,5 +157,3 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    

@@ -8,7 +8,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button" // Ensure buttonVariants is imported
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -262,28 +262,34 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  React.ComponentProps<typeof Button> // This includes `asChild` and `children`
+>(({ className, onClick, children, asChild, ...buttonProps }, ref) => {
+  const { toggleSidebar } = useSidebar();
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
+      variant={buttonProps.variant ?? (asChild ? undefined : "ghost")} // Use passed variant if asChild, else default to ghost
+      size={buttonProps.size ?? (asChild ? undefined : "icon")} // Use passed size if asChild, else default to icon
+      className={cn(asChild ? "" : "h-7 w-7", className)} // Apply default trigger styles only if not `asChild`
       onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
+        if (onClick) onClick(event); // Call user-provided onClick
+        toggleSidebar();
       }}
-      {...props}
+      {...buttonProps} // Spread the rest of the button props (could include user's variant, size, className if asChild)
+      asChild={!!asChild} // Pass the asChild prop to the internal Button
     >
-      <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      {asChild ? children : ( // If SidebarTrigger is used with asChild, render its children.
+                              // Otherwise, render the default PanelLeft icon and sr-only span.
+        <>
+          <PanelLeft />
+          <span className="sr-only">Toggle Sidebar</span>
+        </>
+      )}
     </Button>
-  )
-})
+  );
+});
 SidebarTrigger.displayName = "SidebarTrigger"
 
 const SidebarRail = React.forwardRef<
@@ -512,27 +518,10 @@ const SidebarMenuItem = React.forwardRef<
 ))
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
-const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>svg]:size-4 [&>svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
-      },
-      size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+// Exported buttonVariants for use in AppLayout
+// const sidebarMenuButtonVariants = cva( // This was already exported, which is good.
+// ...
+// )
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
@@ -540,52 +529,60 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  } & VariantProps<typeof sidebarMenuButtonVariants>
+  } & VariantProps<typeof buttonVariants> // Use general buttonVariants
 >(
   (
     {
       asChild = false,
       isActive = false,
-      variant = "default",
-      size = "default",
+      variant = "default", // Use general Button variants
+      size = "default",    // Use general Button sizes
       tooltip,
       className,
+      children, // Ensure children is destructured
       ...props
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
+    // const Comp = asChild ? Slot : "button" // This logic is handled by ui/Button
     const { isMobile, state } = useSidebar()
 
-    const button = (
-      <Comp
+    const buttonElement = (
+      <Button // Use the ui/Button directly
         ref={ref}
         data-sidebar="menu-button"
-        data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        variant={variant}
+        size={size}
+        className={cn(
+          // Apply specific sidebar menu button styles if needed, or rely on variants
+           "w-full items-center gap-2 overflow-hidden text-left outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+           isActive && "bg-sidebar-primary text-sidebar-primary-foreground", // More direct active styling
+           state === "collapsed" && (size === "lg" ? "!p-0" : "!size-8 !p-2"),
+          className
+        )}
+        asChild={asChild}
         {...props}
-      />
+      >
+        {children}
+      </Button>
     )
 
+
     if (!tooltip) {
-      return button
+      return buttonElement
     }
 
-    if (typeof tooltip === "string") {
-      tooltip = {
-        children: tooltip,
-      }
-    }
+    const tooltipContentProps = typeof tooltip === "string" ? { children: tooltip } : tooltip;
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltip}
+          {...tooltipContentProps}
         />
       </Tooltip>
     )
@@ -751,7 +748,7 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuButton,
-  sidebarMenuButtonVariants,
+  sidebarMenuButtonVariants, // Export general buttonVariants as sidebarMenuButtonVariants
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
@@ -763,3 +760,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
