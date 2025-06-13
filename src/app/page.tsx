@@ -55,16 +55,14 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">{link.description}</p>
               </CardContent>
               <CardFooter>
-                <Link href={link.href} passHref legacyBehavior>
-                  <Button asChild variant="outline" className="w-full justify-center">
-                    <a>
-                      <span className="flex items-center justify-center w-full">
-                        Go to {link.title.split(' ')[1]}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </span>
-                    </a>
-                  </Button>
-                </Link>
+                <Button asChild variant="outline" className="w-full justify-center">
+                  <Link href={link.href}>
+                    <span className="flex items-center justify-center w-full">
+                      Go to {link.title.split(' ')[1]}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </span>
+                  </Link>
+                </Button>
               </CardFooter>
             </Card>
           ))}

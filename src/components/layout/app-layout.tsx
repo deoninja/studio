@@ -12,13 +12,14 @@ import {
   SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
+  SidebarTrigger, // SidebarMenuButton removed as we'll style Link directly
+  sidebarMenuButtonVariants, // Import the variants
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   ActivitySquare,
@@ -70,17 +71,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarMenu>
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <Link href={item.href} legacyBehavior passHref>
-                    <SidebarMenuButton
-                      isActive={pathname === item.href}
-                      className="w-full justify-start"
-                      variant={pathname === item.href ? 'default' : 'ghost'}
-                      tooltip={{ children: item.label, side: 'right', className: 'bg-card text-card-foreground border' }}
-                    >
-                      {item.icon}
-                      <span className="truncate">{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        data-active={pathname === item.href}
+                        className={cn(
+                          sidebarMenuButtonVariants({
+                            variant: pathname === item.href ? 'default' : 'ghost',
+                            size: 'default',
+                          }),
+                          "w-full justify-start"
+                        )}
+                      >
+                        {item.icon}
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-card text-card-foreground border">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -88,17 +99,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
              <SidebarMenu>
               {secondaryNavItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                   <Link href={item.href} legacyBehavior passHref>
-                    <SidebarMenuButton
-                      isActive={pathname === item.href}
-                      className="w-full justify-start"
-                      variant={pathname === item.href ? 'default' : 'ghost'}
-                       tooltip={{ children: item.label, side: 'right', className: 'bg-card text-card-foreground border' }}
-                    >
-                      {item.icon}
-                      <span className="truncate">{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                   <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        data-active={pathname === item.href}
+                        className={cn(
+                          sidebarMenuButtonVariants({
+                            variant: pathname === item.href ? 'default' : 'ghost',
+                            size: 'default',
+                          }),
+                          "w-full justify-start"
+                        )}
+                      >
+                        {item.icon}
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-card text-card-foreground border">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -131,3 +152,5 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
