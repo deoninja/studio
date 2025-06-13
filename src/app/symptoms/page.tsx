@@ -15,14 +15,14 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import * as z from 'zod';
-import { BarChart, PlusCircle, Trash2 } from 'lucide-react';
+import { ActivitySquare, BarChart, PlusCircle, Trash2 } from 'lucide-react';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, CartesianGrid, XAxis, YAxis, ResponsiveContainer, BarProps as RechartsBarProps } from "recharts" // RechartsBarProps might not be directly exported, might need to find appropriate type
+import { Bar, CartesianGrid, XAxis, YAxis, ResponsiveContainer, BarChart as RechartsBarChart } from "recharts"
 
 const symptomCategories = [
   "Pain", "Nausea", "Fatigue", "Neuropathy", "Constipation", "Mouth Sores", "Bone Aches", "Other"
@@ -67,6 +67,7 @@ export default function SymptomsPage() {
   const { toast } = useToast();
   const [symptoms, setSymptoms] = React.useState<SymptomEntry[]>([]);
   const [showForm, setShowForm] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const form = useForm<SymptomFormValues>({
     resolver: zodResolver(symptomFormSchema),
@@ -77,21 +78,66 @@ export default function SymptomsPage() {
     },
   });
 
-  const onSubmit = (data: SymptomFormValues) => {
+  // Fetch symptoms from API
+  React.useEffect(() => {
+    const fetchSymptoms = async () => {
+      try {
+        const response = await fetch('/api/symptoms');
+        if (!response.ok) throw new Error('Failed to fetch symptoms');
+        const data = await response.json();
+        setSymptoms(data);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to load symptoms", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSymptoms();
+  }, []);
+
+  const onSubmit = async (data: SymptomFormValues) => {
     const newSymptom: SymptomEntry = {
       ...data,
       id: new Date().toISOString(),
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
     };
-    setSymptoms(prev => [newSymptom, ...prev]);
-    toast({ title: "Symptom Logged", description: `${data.category} intensity ${data.intensity} recorded.` });
-    form.reset();
-    setShowForm(false);
+
+    try {
+      const response = await fetch('/api/symptoms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSymptom),
+      });
+
+      if (!response.ok) throw new Error('Failed to save symptom');
+
+      // Add new symptom to local state
+      setSymptoms(prev => [newSymptom, ...prev]);
+      toast({ title: "Symptom Logged", description: `${data.category} intensity ${data.intensity} recorded.` });
+      form.reset();
+      setShowForm(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save symptom", variant: "destructive" });
+    }
   };
 
-  const deleteSymptom = (id: string) => {
-    setSymptoms(prev => prev.filter(symptom => symptom.id !== id));
-    toast({ title: "Symptom Deleted", description: "The symptom entry has been removed." });
+  const deleteSymptom = async (id: string) => {
+    try {
+      const response = await fetch(`/api/symptoms/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete symptom');
+
+      // Remove symptom from local state
+      setSymptoms(prev => prev.filter(symptom => symptom.id !== id));
+      toast({ title: "Symptom Deleted", description: "The symptom entry has been removed." });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete symptom", variant: "destructive" });
+    }
   };
   
   const aggregatedSymptoms = React.useMemo(() => {
@@ -197,16 +243,18 @@ export default function SymptomsPage() {
             <CardDescription>A summary of your logged symptoms and their average intensities.</CardDescription>
           </CardHeader>
           <CardContent>
-            {symptoms.length > 0 ? (
+            {isLoading ? (
+              <p className="text-muted-foreground">Loading symptoms...</p>
+            ) : symptoms.length > 0 ? (
               <ChartContainer config={chartConfigCustom} className="min-h-[200px] w-full">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={aggregatedSymptoms} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <RechartsBarChart data={aggregatedSymptoms} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="category" tickLine={false} axisLine={false} tickMargin={8} />
                     <YAxis domain={[0, 10]} allowDataOverflow={true} tickLine={false} axisLine={false} tickMargin={8} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="averageIntensity" radius={4} fill="var(--color-primary)" />
-                  </BarChart>
+                  </RechartsBarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
@@ -222,7 +270,9 @@ export default function SymptomsPage() {
             <CardDescription>Review your previously logged symptoms.</CardDescription>
           </CardHeader>
           <CardContent>
-            {symptoms.length > 0 ? (
+            {isLoading ? (
+              <p className="text-muted-foreground">Loading history...</p>
+            ) : symptoms.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
