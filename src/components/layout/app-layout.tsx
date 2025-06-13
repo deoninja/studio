@@ -13,9 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarTrigger,
-  SidebarInset, // Now correctly expected to be imported
-} from '@/components/ui/sidebar'; 
-import { Button, buttonVariants } from '@/components/ui/button';
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import { Button, buttonVariants } from '@/components/ui/button'; // Added Button here
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -77,16 +77,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       <Link
                         href={item.href}
                         className={cn(
-                          buttonVariants({ // Using buttonVariants from @/components/ui/button
+                          buttonVariants({
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start gap-2",
+                          "w-full justify-start",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                          pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
+                           pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
-                        <span className="flex items-center gap-2"> {/* Single child for Link */}
+                        <span className="flex items-center gap-2">
                           {item.icon}
                           <span className="truncate">{item.label}</span>
                         </span>
@@ -107,17 +107,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.href}
-                        className={cn(
-                           buttonVariants({ // Using buttonVariants from @/components/ui/button
+                         className={cn(
+                          buttonVariants({
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start gap-2",
+                          "w-full justify-start",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                          pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
+                           pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
-                        <span className="flex items-center gap-2"> {/* Single child for Link */}
+                        <span className="flex items-center gap-2">
                           {item.icon}
                           <span className="truncate">{item.label}</span>
                         </span>
@@ -139,19 +139,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Button>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset> {/* SidebarInset component from sidebar.tsx */}
+      <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4 md:hidden">
           <SidebarTrigger
-            asChild
-            variant="outline" // Passed to inner Button, which becomes Slot
-            size="icon"       // Passed to inner Button, which becomes Slot
-            className="h-7 w-7"   // Passed to inner Button, which becomes Slot
-          >
-            <button> {/* Simpler child, Slot will provide styling */}
-              <HeartPulse className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </button>
-          </SidebarTrigger>
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+          />
           <Link href="/" className="flex items-center gap-2">
             <HeartPulse className="h-6 w-6 text-primary" />
             <span className="text-lg font-headline font-semibold text-primary">OncoAssist</span>
@@ -164,5 +158,3 @@ export function AppLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
