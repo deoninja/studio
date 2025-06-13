@@ -13,10 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarTrigger,
-  // sidebarMenuButtonVariants, // This was the problematic part from previous step
-  SidebarInset, // Ensured this is imported
+  SidebarInset,
 } from '@/components/ui/sidebar';
-import { Button, buttonVariants } from '@/components/ui/button'; // Import buttonVariants
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -78,17 +77,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         href={item.href}
                         data-active={pathname === item.href}
                         className={cn(
-                          buttonVariants({ // Use buttonVariants directly
+                          buttonVariants({
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start gap-2", // Ensure gap for icon and text
+                          "w-full justify-start gap-2",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                           pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
-                        {item.icon}
-                        <span className="truncate">{item.label}</span>
+                        <span className="flex items-center gap-2">
+                          {item.icon}
+                          <span className="truncate">{item.label}</span>
+                        </span>
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="bg-card text-card-foreground border">
@@ -108,17 +109,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         href={item.href}
                         data-active={pathname === item.href}
                         className={cn(
-                           buttonVariants({ // Use buttonVariants directly
+                           buttonVariants({
                             variant: pathname === item.href ? 'default' : 'ghost',
                             size: 'default',
                           }),
-                          "w-full justify-start gap-2", // Ensure gap for icon and text
+                          "w-full justify-start gap-2",
                           "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                           pathname === item.href && "bg-sidebar-primary text-sidebar-primary-foreground"
                         )}
                       >
-                        {item.icon}
-                        <span className="truncate">{item.label}</span>
+                        <span className="flex items-center gap-2">
+                          {item.icon}
+                          <span className="truncate">{item.label}</span>
+                        </span>
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="bg-card text-card-foreground border">
